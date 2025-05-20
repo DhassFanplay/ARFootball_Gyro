@@ -18,6 +18,7 @@
 </head>
 
 <body>
+
     <div id="unity-container" class="unity-mobile">
         <canvas id="unity-canvas" width="960" height="600" tabindex="-1"></canvas>
         <div id="unity-warning"></div>
@@ -61,7 +62,6 @@
             productVersion: "0.1",
             showBanner: unityShowBanner,
         };
-
         const unityLoader = document.createElement("script");
         unityLoader.src = loaderUrl;
         unityLoader.onload = () => {
@@ -69,12 +69,14 @@
                 // Optional: handle custom loading here if needed
             }).then((unityInstance) => {
                 window.unityInstance = unityInstance;
-                setupGyro(unityInstance); // You mentioned this is handled in another JS
                 fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
+                //setupGyro(unityInstance); // You mentioned this is handled in another JS
+
             }).catch((message) => alert(message));
         };
         document.body.appendChild(unityLoader);
     </script>
+
 </body>
 
 </html>
