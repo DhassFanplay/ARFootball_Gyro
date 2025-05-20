@@ -1,4 +1,4 @@
-const detectorPromise = (async () => {
+﻿const detectorPromise = (async () => {
     console.log("[DEBUG] Initializing MoveNet detector...");
     await tf.setBackend("webgl");
     await tf.ready();
@@ -8,34 +8,59 @@ const detectorPromise = (async () => {
     console.log("[DEBUG] Detector ready.");
     return detector;
 })();
-function setupGyro(unity) {
-    unityInstance = unity;
+function logDebug(message) {
+    const log = document.getElementById("debugLog");
+    if (log) {
+        log.innerText = `[${new Date().toLocaleTimeString()}] ${message}\n` + log.innerText;
+    }
+}
 
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission()
+function handleMotion(event) {
+    const acc = event.accelerationIncludingGravity;
+    const rot = event.rotationRate;
+
+    const data = {
+        ax: acc?.x ?? 0,
+        ay: acc?.y ?? 0,
+        az: acc?.z ?? 0,
+        alpha: rot?.alpha ?? 0,
+        beta: rot?.beta ?? 0,
+        gamma: rot?.gamma ?? 0
+    };
+
+    logDebug(`Accel: x=${data.ax.toFixed(2)}, y=${data.ay.toFixed(2)}, z=${data.az.toFixed(2)} | Rotation: α=${data.alpha.toFixed(2)}, β=${data.beta.toFixed(2)}, γ=${data.gamma.toFixed(2)}`);
+
+    if (window.unityInstance) {
+        window.unityInstance.SendMessage("GyroReceiver", "OnGyroData", JSON.stringify(data));
+    }
+}
+
+function setupGyro() {
+    if (typeof DeviceMotionEvent?.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
             .then(response => {
                 if (response === 'granted') {
-                    window.addEventListener('deviceorientation', handleOrientation, true);
+                    window.addEventListener('devicemotion', handleMotion, true);
+                    logDebug("Gyroscope permission granted and listener active.");
+                } else {
+                    logDebug("Gyroscope permission denied.");
                 }
             })
-            .catch(console.error);
+            .catch(err => {
+                logDebug("Error requesting gyro permission: " + err);
+            });
     } else {
-        window.addEventListener('deviceorientation', handleOrientation, true);
+        // Older Android or desktop
+        window.addEventListener('devicemotion', handleMotion, true);
+        logDebug("Gyroscope listener added (no permission required).");
     }
 }
 
-function handleOrientation(event) {
-    const alpha = event.alpha; // Z axis
-    const beta = event.beta;   // X axis
-    const gamma = event.gamma; // Y axis
-
-    if (unityInstance) {
-        unityInstance.SendMessage("GyroReceiver", "OnGyroData", `${alpha},${beta},${gamma}`);
-    }
-}
 const canvas = document.createElement("canvas");
 const ctx = canvas.getContext("2d");
-
+window.addEventListener('load', () => {
+    setupGyro();
+});
 window.ReceiveWebcamFrame = async (base64) => {
     const detector = await detectorPromise;
 
