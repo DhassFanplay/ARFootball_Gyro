@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Unity WebGL Player | WebGLFootBall</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico" />
+    <link rel="stylesheet" href="TemplateData/style.css" />
+
+    <!-- TensorFlow & Pose Detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@3.14.0/dist/tf-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@3.14.0/dist/tf-converter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@3.14.0/dist/tf-backend-webgl.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
+    <script type="module" src="OpenCVJS.js"></script>
+
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no" />
+</head>
+
+<body>
+    <div id="unity-container" class="unity-mobile">
+        <canvas id="unity-canvas" width="960" height="600" tabindex="-1"></canvas>
+        <div id="unity-warning"></div>
+        <div id="unity-footer">
+            <div id="unity-webgl-logo"></div>
+            <div id="unity-fullscreen-button"></div>
+            <div id="unity-build-title">WebGLFootBall</div>
+        </div>
+    </div>
+
+    <!-- Unity Loader -->
+    <script>
+        const container = document.querySelector("#unity-container");
+        const canvas = document.querySelector("#unity-canvas");
+        const fullscreenButton = document.querySelector("#unity-fullscreen-button");
+        const warningBanner = document.querySelector("#unity-warning");
+
+        function unityShowBanner(msg, type) {
+            const div = document.createElement("div");
+            div.innerHTML = msg;
+            warningBanner.appendChild(div);
+            div.style = `background: ${type === "error" ? "red" : "yellow"}; padding: 10px;`;
+            if (type === "warning") {
+                setTimeout(() => {
+                    warningBanner.removeChild(div);
+                    warningBanner.style.display = warningBanner.children.length ? "block" : "none";
+                }, 5000);
+            }
+            warningBanner.style.display = warningBanner.children.length ? "block" : "none";
+        }
+
+        const buildUrl = "Build";
+        const loaderUrl = buildUrl + "/Check1.loader.js";
+        const config = {
+            dataUrl: buildUrl + "/Check1.data",
+            frameworkUrl: buildUrl + "/Check1.framework.js",
+            codeUrl: buildUrl + "/Check1.wasm",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "DefaultCompany",
+            productName: "WebGLFootBall",
+            productVersion: "0.1",
+            showBanner: unityShowBanner,
+        };
+
+        const unityLoader = document.createElement("script");
+        unityLoader.src = loaderUrl;
+        unityLoader.onload = () => {
+            createUnityInstance(canvas, config, (progress) => {
+                // Optional: handle custom loading here if needed
+            }).then((unityInstance) => {
+                window.unityInstance = unityInstance;
+                setupGyro(unityInstance); // You mentioned this is handled in another JS
+                fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
+            }).catch((message) => alert(message));
+        };
+        document.body.appendChild(unityLoader);
+    </script>
+</body>
+
+</html>
